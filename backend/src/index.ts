@@ -28,7 +28,19 @@ const server = http.createServer(app);
 initSocket(server);
 
 // ---------- Middlewares ----------
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      connectSrc: ["'self'", "wss:", "ws:"],
+      imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://images.unsplash.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      fontSrc: ["'self'", "data:"],
+      mediaSrc: ["'self'", "blob:"],
+    },
+  },
+}));
 app.use(compression());
 
 const allowedOrigins = process.env.FRONTEND_URL?.split(',').map(s => s.trim()) || ['http://localhost:5173'];
