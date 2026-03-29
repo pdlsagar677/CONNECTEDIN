@@ -114,7 +114,8 @@ export const useCallEvents = () => {
     const onOffer = async ({ from, offer }: any) => {
       const w = webrtcRef.current;
       const cs = callStateRef.current;
-      if (cs.callStatus !== 'in-call') return;
+      // Accept offer if in-call OR ringing (offer can arrive before Redux updates)
+      if (cs.callStatus !== 'in-call' && cs.callStatus !== 'ringing') return;
       await w.handleOffer(from, offer, handleRemoteStream);
     };
 

@@ -6,8 +6,6 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { globalLimiter } from './middlewares/rateLimiter';
 import http from 'http';
-import https from 'https';
-import fs from 'fs';
 import path from 'path';
 
 import connectDB from './utils/db';
@@ -23,14 +21,8 @@ dotenv.config();
 const app: Application = express();
 const PORT = Number(process.env.PORT) || 5000;
 
-// ---------- HTTPS/HTTP Server ----------
-const certPath = path.resolve(__dirname, '../../certs/cert.pem');
-const keyPath = path.resolve(__dirname, '../../certs/key.pem');
-const useHttps = fs.existsSync(certPath) && fs.existsSync(keyPath);
-
-const server = useHttps
-  ? https.createServer({ cert: fs.readFileSync(certPath), key: fs.readFileSync(keyPath) }, app)
-  : http.createServer(app);
+// ---------- HTTP Server (hosting platforms like Render handle SSL at edge) ----------
+const server = http.createServer(app);
 
 // ---------- Initialize Socket.IO ----------
 initSocket(server);
@@ -60,12 +52,11 @@ app.use('/api/message', messageRoute);
 app.use('/api/notifications', notificationRoute);
 app.use('/api/stories', storyRoute);
 
-// ---------- 404 Handler ----------
-app.use((req: Request, res: Response) => {
-  res.status(404).json({
-    success: false,
-    message: 'Route not found',
-  });
+// ---------- Serve Frontend (production) ----------
+const frontendDist = path.resolve(__dirname, '../../frontend/dist');
+app.use(express.static(frontendDist));
+app.get('*', (req: Request, res: Response) => {
+  res.sendFile(path.join(frontendDist, 'index.html'));
 });
 
 // ---------- Error Handler ----------
@@ -87,9 +78,8 @@ const startServer = async () => {
   }
   console.log('MongoDB connected successfully');
 
-  const protocol = useHttps ? 'https' : 'http';
   server.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server (API + Socket.IO) running on ${protocol}://0.0.0.0:${PORT}`);
+    console.log(`Server (API + Socket.IO) running on http://0.0.0.0:${PORT}`);
   });
 
   process.on('unhandledRejection', (err: Error) => {

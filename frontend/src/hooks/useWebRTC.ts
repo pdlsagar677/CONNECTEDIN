@@ -8,6 +8,7 @@ const ICE_CONFIG: RTCConfiguration = {
     { urls: 'stun:stun1.l.google.com:19302' },
     { urls: 'stun:stun2.l.google.com:19302' },
   ],
+  iceCandidatePoolSize: 10,
 };
 
 export const useWebRTC = () => {
@@ -16,6 +17,7 @@ export const useWebRTC = () => {
   const remoteStreamRef = useRef<MediaStream | null>(null);
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
+  const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
   const { socket } = useSelector((store: RootState) => store.socketio);
 
   const getMedia = useCallback(async (callType: 'audio' | 'video'): Promise<MediaStream | null> => {
@@ -101,6 +103,20 @@ export const useWebRTC = () => {
     }
   }, [socket, initPeerConnection]);
 
+  const flushPendingCandidates = useCallback(async () => {
+    const pc = peerConnectionRef.current;
+    if (!pc || !pc.remoteDescription) return;
+    const candidates = pendingCandidatesRef.current;
+    pendingCandidatesRef.current = [];
+    for (const candidate of candidates) {
+      try {
+        await pc.addIceCandidate(new RTCIceCandidate(candidate));
+      } catch (err) {
+        console.error('Error adding queued ICE candidate:', err);
+      }
+    }
+  }, []);
+
   const handleOffer = useCallback(async (
     peerId: string,
     offer: RTCSessionDescriptionInit,
@@ -108,27 +124,35 @@ export const useWebRTC = () => {
   ) => {
     const pc = initPeerConnection(peerId, onRemoteStream);
     await pc.setRemoteDescription(new RTCSessionDescription(offer));
+    // Flush any ICE candidates that arrived before the offer
+    await flushPendingCandidates();
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
 
     if (socket) {
       (socket as any).emit('webrtc:answer', { to: peerId, answer });
     }
-  }, [socket, initPeerConnection]);
+  }, [socket, initPeerConnection, flushPendingCandidates]);
 
   const handleAnswer = useCallback(async (answer: RTCSessionDescriptionInit) => {
     if (peerConnectionRef.current) {
       await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(answer));
+      // Flush any ICE candidates that arrived before the answer
+      await flushPendingCandidates();
     }
-  }, []);
+  }, [flushPendingCandidates]);
 
   const handleIceCandidate = useCallback(async (candidate: RTCIceCandidateInit) => {
-    if (peerConnectionRef.current) {
-      try {
-        await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
-      } catch (err) {
-        console.error('Error adding ICE candidate:', err);
-      }
+    const pc = peerConnectionRef.current;
+    // Queue candidates if peer connection or remote description isn't ready yet
+    if (!pc || !pc.remoteDescription) {
+      pendingCandidatesRef.current.push(candidate);
+      return;
+    }
+    try {
+      await pc.addIceCandidate(new RTCIceCandidate(candidate));
+    } catch (err) {
+      console.error('Error adding ICE candidate:', err);
     }
   }, []);
 
@@ -163,6 +187,7 @@ export const useWebRTC = () => {
     }
     if (localVideoRef.current) localVideoRef.current.srcObject = null;
     if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+    pendingCandidatesRef.current = [];
   }, []);
 
   return {
