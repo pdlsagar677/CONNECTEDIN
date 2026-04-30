@@ -16,7 +16,7 @@ exports.sendPasswordResetEmail = exports.sendVerificationEmail = void 0;
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const createTransport = () => {
     return nodemailer_1.default.createTransport({
-        host: process.env.SMTP_HOST || 'smtp.ethereal.email',
+        host: process.env.SMTP_HOST,
         port: Number(process.env.SMTP_PORT) || 587,
         secure: false,
         auth: {
@@ -31,7 +31,7 @@ const sendVerificationEmail = (to, username, otp) => __awaiter(void 0, void 0, v
     <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 480px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
       <!-- Header -->
       <div style="background: linear-gradient(135deg, #2563eb, #3b82f6); padding: 32px 24px; text-align: center;">
-        <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700;">SNAP_GRAM</h1>
+        <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700;">Connectedin</h1>
         <p style="color: rgba(255,255,255,0.85); margin: 8px 0 0; font-size: 14px;">Verify your email address</p>
       </div>
 
@@ -39,7 +39,7 @@ const sendVerificationEmail = (to, username, otp) => __awaiter(void 0, void 0, v
       <div style="padding: 32px 24px;">
         <p style="color: #1a1a1a; font-size: 16px; margin: 0 0 8px;">Hi <strong>${username}</strong>,</p>
         <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin: 0 0 24px;">
-          Welcome to SNAP_GRAM! Use the verification code below to complete your registration.
+          Welcome to Connectedin! Use the verification code below to complete your registration.
         </p>
 
         <!-- OTP Box -->
@@ -55,14 +55,14 @@ const sendVerificationEmail = (to, username, otp) => __awaiter(void 0, void 0, v
 
       <!-- Footer -->
       <div style="background: #f9fafb; padding: 16px 24px; text-align: center; border-top: 1px solid #f3f4f6;">
-        <p style="color: #9ca3af; font-size: 12px; margin: 0;">&copy; ${new Date().getFullYear()} SNAP_GRAM. All rights reserved.</p>
+        <p style="color: #9ca3af; font-size: 12px; margin: 0;">&copy; ${new Date().getFullYear()} Connectedin. All rights reserved.</p>
       </div>
     </div>
   `;
     const info = yield transporter.sendMail({
-        from: `"SNAP_GRAM" <${process.env.EMAIL_FROM || 'noreply@snapgram.dev'}>`,
+        from: `"Connectedin" <${process.env.EMAIL_FROM || 'noreply@snapgram.dev'}>`,
         to,
-        subject: `${otp} is your SNAP_GRAM verification code`,
+        subject: `${otp} is your Connectedin verification code`,
         html,
     });
     // Log Ethereal preview URL in development
@@ -76,7 +76,7 @@ const sendPasswordResetEmail = (to, username, otp) => __awaiter(void 0, void 0, 
     const html = `
     <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 480px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
       <div style="background: linear-gradient(135deg, #dc2626, #ef4444); padding: 32px 24px; text-align: center;">
-        <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700;">SNAP_GRAM</h1>
+        <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700;">Connectedin</h1>
         <p style="color: rgba(255,255,255,0.85); margin: 8px 0 0; font-size: 14px;">Password Reset Request</p>
       </div>
       <div style="padding: 32px 24px;">
@@ -93,14 +93,14 @@ const sendPasswordResetEmail = (to, username, otp) => __awaiter(void 0, void 0, 
         </p>
       </div>
       <div style="background: #f9fafb; padding: 16px 24px; text-align: center; border-top: 1px solid #f3f4f6;">
-        <p style="color: #9ca3af; font-size: 12px; margin: 0;">&copy; ${new Date().getFullYear()} SNAP_GRAM. All rights reserved.</p>
+        <p style="color: #9ca3af; font-size: 12px; margin: 0;">&copy; ${new Date().getFullYear()} Connectedin. All rights reserved.</p>
       </div>
     </div>
   `;
     const info = yield transporter.sendMail({
-        from: `"SNAP_GRAM" <${process.env.EMAIL_FROM || 'noreply@snapgram.dev'}>`,
+        from: `"Connectedin" <${process.env.EMAIL_FROM || 'noreply@snapgram.dev'}>`,
         to,
-        subject: `${otp} is your SNAP_GRAM password reset code`,
+        subject: `${otp} is your Connectedin password reset code`,
         html,
     });
     if (process.env.NODE_ENV === 'development') {
