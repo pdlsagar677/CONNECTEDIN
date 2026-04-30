@@ -8,25 +8,36 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendPasswordResetEmail = exports.sendVerificationEmail = void 0;
-const nodemailer_1 = __importDefault(require("nodemailer"));
-const createTransport = () => {
-    return nodemailer_1.default.createTransport({
-        host: process.env.SMTP_HOST,
-        port: Number(process.env.SMTP_PORT) || 587,
-        secure: false,
-        auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS,
-        },
-    });
+const resend_1 = require("resend");
+// import nodemailer from 'nodemailer';
+//
+// --- Gmail SMTP path (commented out) ---
+// Render's free tier blocks outbound SMTP on ports 25/465/587, so this path
+// only works locally or on a paid Render plan. Re-enable it by uncommenting
+// this block and the corresponding sendMail() calls below.
+//
+// const createTransport = () => {
+//   return nodemailer.createTransport({
+//     host: process.env.SMTP_HOST || 'smtp.ethereal.email',
+//     port: Number(process.env.SMTP_PORT) || 587,
+//     secure: false,
+//     auth: {
+//       user: process.env.SMTP_USER,
+//       pass: process.env.SMTP_PASS,
+//     },
+//   });
+// };
+const getResend = () => {
+    const key = process.env.RESEND_API_KEY;
+    if (!key) {
+        throw new Error('RESEND_API_KEY is not set');
+    }
+    return new resend_1.Resend(key);
 };
+const fromAddress = () => process.env.SMTP_FROM || 'Connectedin <onboarding@resend.dev>';
 const sendVerificationEmail = (to, username, otp) => __awaiter(void 0, void 0, void 0, function* () {
-    const transporter = createTransport();
     const html = `
     <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 480px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
       <!-- Header -->
@@ -59,20 +70,35 @@ const sendVerificationEmail = (to, username, otp) => __awaiter(void 0, void 0, v
       </div>
     </div>
   `;
-    const info = yield transporter.sendMail({
-        from: `"Connectedin" <${process.env.EMAIL_FROM || 'noreply@snapgram.dev'}>`,
-        to,
-        subject: `${otp} is your Connectedin verification code`,
-        html,
-    });
-    // Log Ethereal preview URL in development
-    if (process.env.NODE_ENV === 'development') {
-        console.log('Email preview URL:', nodemailer_1.default.getTestMessageUrl(info));
+    try {
+        const { data, error } = yield getResend().emails.send({
+            from: fromAddress(),
+            to,
+            subject: `${otp} is your Connectedin verification code`,
+            html,
+        });
+        if (error)
+            throw error;
+        console.log('Verification email sent:', data === null || data === void 0 ? void 0 : data.id);
     }
+    catch (err) {
+        console.error('sendVerificationEmail failed:', err);
+        throw err;
+    }
+    // --- Gmail SMTP path (commented out) ---
+    // const transporter = createTransport();
+    // const info = await transporter.sendMail({
+    //   from: `"Connectedin" <${process.env.SMTP_FROM || 'noreply@snapgram.dev'}>`,
+    //   to,
+    //   subject: `${otp} is your Connectedin verification code`,
+    //   html,
+    // });
+    // if (process.env.NODE_ENV === 'development') {
+    //   console.log('Email preview URL:', nodemailer.getTestMessageUrl(info));
+    // }
 });
 exports.sendVerificationEmail = sendVerificationEmail;
 const sendPasswordResetEmail = (to, username, otp) => __awaiter(void 0, void 0, void 0, function* () {
-    const transporter = createTransport();
     const html = `
     <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 480px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
       <div style="background: linear-gradient(135deg, #dc2626, #ef4444); padding: 32px 24px; text-align: center;">
@@ -97,14 +123,31 @@ const sendPasswordResetEmail = (to, username, otp) => __awaiter(void 0, void 0, 
       </div>
     </div>
   `;
-    const info = yield transporter.sendMail({
-        from: `"Connectedin" <${process.env.EMAIL_FROM || 'noreply@snapgram.dev'}>`,
-        to,
-        subject: `${otp} is your Connectedin password reset code`,
-        html,
-    });
-    if (process.env.NODE_ENV === 'development') {
-        console.log('Password reset email preview URL:', nodemailer_1.default.getTestMessageUrl(info));
+    try {
+        const { data, error } = yield getResend().emails.send({
+            from: fromAddress(),
+            to,
+            subject: `${otp} is your Connectedin password reset code`,
+            html,
+        });
+        if (error)
+            throw error;
+        console.log('Password reset email sent:', data === null || data === void 0 ? void 0 : data.id);
     }
+    catch (err) {
+        console.error('sendPasswordResetEmail failed:', err);
+        throw err;
+    }
+    // --- Gmail SMTP path (commented out) ---
+    // const transporter = createTransport();
+    // const info = await transporter.sendMail({
+    //   from: `"Connectedin" <${process.env.SMTP_FROM || 'noreply@snapgram.dev'}>`,
+    //   to,
+    //   subject: `${otp} is your Connectedin password reset code`,
+    //   html,
+    // });
+    // if (process.env.NODE_ENV === 'development') {
+    //   console.log('Password reset email preview URL:', nodemailer.getTestMessageUrl(info));
+    // }
 });
 exports.sendPasswordResetEmail = sendPasswordResetEmail;

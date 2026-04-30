@@ -29,6 +29,7 @@
     "multer": "^2.0.1",
     "nodemailer": "^8.0.4",
     "nodemon": "^3.1.10",
+    "resend": "^6.12.2",
     "sharp": "^0.34.2",
     "socket.io": "^4.8.1"
   },

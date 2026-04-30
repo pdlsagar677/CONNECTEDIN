@@ -40,7 +40,19 @@ exports.server = server;
 // ---------- Initialize Socket.IO ----------
 (0, socket_1.initSocket)(server);
 // ---------- Middlewares ----------
-app.use((0, helmet_1.default)());
+app.use((0, helmet_1.default)({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            connectSrc: ["'self'", "wss:", "ws:"],
+            imgSrc: ["'self'", "data:", "blob:", "https:"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            fontSrc: ["'self'", "data:"],
+            mediaSrc: ["'self'", "blob:"],
+        },
+    },
+}));
 app.use((0, compression_1.default)());
 const allowedOrigins = ((_a = process.env.FRONTEND_URL) === null || _a === void 0 ? void 0 : _a.split(',').map(s => s.trim())) || ['http://localhost:5173'];
 app.use((0, cors_1.default)({
@@ -61,7 +73,7 @@ app.use('/api/stories', story_route_1.default);
 // ---------- Serve Frontend (production) ----------
 const frontendDist = path_1.default.resolve(__dirname, '../../frontend/dist');
 app.use(express_1.default.static(frontendDist));
-app.get('*', (req, res) => {
+app.get('{*path}', (req, res) => {
     res.sendFile(path_1.default.join(frontendDist, 'index.html'));
 });
 // ---------- Error Handler ----------
