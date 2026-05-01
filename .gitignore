@@ -1,4 +1,28 @@
-.claude
-CLAUDE.MD
-DOCUMENTATION.MD 
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Environment variables
 .env
+.env.*
+!.env.example
+
+# Editor / OS
+.claude
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Project docs (kept local)
+CLAUDE.MD
+DOCUMENTATION.MD
