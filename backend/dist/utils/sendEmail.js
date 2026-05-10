@@ -12,12 +12,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendPasswordResetEmail = exports.sendVerificationEmail = void 0;
 const resend_1 = require("resend");
 // import nodemailer from 'nodemailer';
-//
 // --- Gmail SMTP path (commented out) ---
 // Render's free tier blocks outbound SMTP on ports 25/465/587, so this path
-// only works locally or on a paid Render plan. Re-enable it by uncommenting
-// this block and the corresponding sendMail() calls below.
-//
+// only works locally or on a paid Render plan. To switch back: uncomment the
+// nodemailer import above, this helper, and the transporter blocks inside the
+// send* functions below (and comment out the Resend equivalents).
 // const createTransport = () => {
 //   return nodemailer.createTransport({
 //     host: process.env.SMTP_HOST || 'smtp.ethereal.email',
@@ -29,6 +28,9 @@ const resend_1 = require("resend");
 //     },
 //   });
 // };
+// --- Resend path (active) ---
+// Works on Render free tier because Resend sends over HTTPS (port 443),
+// which Render does not block (unlike SMTP ports).
 const getResend = () => {
     const key = process.env.RESEND_API_KEY;
     if (!key) {
@@ -70,6 +72,7 @@ const sendVerificationEmail = (to, username, otp) => __awaiter(void 0, void 0, v
       </div>
     </div>
   `;
+    // --- Resend path (active) ---
     try {
         const { data, error } = yield getResend().emails.send({
             from: fromAddress(),
@@ -86,15 +89,22 @@ const sendVerificationEmail = (to, username, otp) => __awaiter(void 0, void 0, v
         throw err;
     }
     // --- Gmail SMTP path (commented out) ---
-    // const transporter = createTransport();
-    // const info = await transporter.sendMail({
-    //   from: `"Connectedin" <${process.env.SMTP_FROM || 'noreply@snapgram.dev'}>`,
-    //   to,
-    //   subject: `${otp} is your Connectedin verification code`,
-    //   html,
-    // });
-    // if (process.env.NODE_ENV === 'development') {
-    //   console.log('Email preview URL:', nodemailer.getTestMessageUrl(info));
+    // try {
+    //   const transporter = createTransport();
+    //   const info = await transporter.sendMail({
+    //     from: fromAddress(),
+    //     to,
+    //     subject: `${otp} is your Connectedin verification code`,
+    //     html,
+    //   });
+    //   console.log('Verification email sent:', info.messageId);
+    //   if (process.env.NODE_ENV === 'development') {
+    //     const preview = nodemailer.getTestMessageUrl(info);
+    //     if (preview) console.log('Email preview URL:', preview);
+    //   }
+    // } catch (err) {
+    //   console.error('sendVerificationEmail failed:', err);
+    //   throw err;
     // }
 });
 exports.sendVerificationEmail = sendVerificationEmail;
@@ -123,6 +133,7 @@ const sendPasswordResetEmail = (to, username, otp) => __awaiter(void 0, void 0, 
       </div>
     </div>
   `;
+    // --- Resend path (active) ---
     try {
         const { data, error } = yield getResend().emails.send({
             from: fromAddress(),
@@ -139,15 +150,22 @@ const sendPasswordResetEmail = (to, username, otp) => __awaiter(void 0, void 0, 
         throw err;
     }
     // --- Gmail SMTP path (commented out) ---
-    // const transporter = createTransport();
-    // const info = await transporter.sendMail({
-    //   from: `"Connectedin" <${process.env.SMTP_FROM || 'noreply@snapgram.dev'}>`,
-    //   to,
-    //   subject: `${otp} is your Connectedin password reset code`,
-    //   html,
-    // });
-    // if (process.env.NODE_ENV === 'development') {
-    //   console.log('Password reset email preview URL:', nodemailer.getTestMessageUrl(info));
+    // try {
+    //   const transporter = createTransport();
+    //   const info = await transporter.sendMail({
+    //     from: fromAddress(),
+    //     to,
+    //     subject: `${otp} is your Connectedin password reset code`,
+    //     html,
+    //   });
+    //   console.log('Password reset email sent:', info.messageId);
+    //   if (process.env.NODE_ENV === 'development') {
+    //     const preview = nodemailer.getTestMessageUrl(info);
+    //     if (preview) console.log('Password reset email preview URL:', preview);
+    //   }
+    // } catch (err) {
+    //   console.error('sendPasswordResetEmail failed:', err);
+    //   throw err;
     // }
 });
 exports.sendPasswordResetEmail = sendPasswordResetEmail;
