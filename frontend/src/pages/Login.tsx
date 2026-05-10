@@ -32,6 +32,10 @@ const Login: React.FC = () => {
     setShowPassword(!showPassword);
   };
 
+  const fillDemo = (email: string) => {
+    setInput({ email, password: "Test@123" });
+  };
+
   const loginHandler = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     try {
@@ -118,6 +122,32 @@ const Login: React.FC = () => {
             </h1>
             <p className="text-sm text-gray-600">
               Welcome back! Let's connect with the world
+            </p>
+          </div>
+
+          {/* Demo Accounts */}
+          <div className="rounded-xl border-2 border-dashed border-blue-200 bg-blue-50/60 p-3">
+            <p className="text-xs font-semibold text-blue-700 mb-2">
+              Try a demo account
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => fillDemo("test@gmail.com")}
+                className="text-xs font-medium px-3 py-1.5 rounded-full bg-white border border-blue-200 text-blue-700 hover:bg-blue-100 hover:border-blue-300 transition-colors"
+              >
+                test@gmail.com
+              </button>
+              <button
+                type="button"
+                onClick={() => fillDemo("example@gmail.com")}
+                className="text-xs font-medium px-3 py-1.5 rounded-full bg-white border border-blue-200 text-blue-700 hover:bg-blue-100 hover:border-blue-300 transition-colors"
+              >
+                example@gmail.com
+              </button>
+            </div>
+            <p className="text-[11px] text-gray-500 mt-2">
+              Password: <span className="font-mono font-semibold text-gray-700">Test@123</span> · click an email to autofill
             </p>
           </div>
 

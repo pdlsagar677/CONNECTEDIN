@@ -8,36 +8,38 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendPasswordResetEmail = exports.sendVerificationEmail = void 0;
-const resend_1 = require("resend");
-// import nodemailer from 'nodemailer';
-// --- Gmail SMTP path (commented out) ---
-// Render's free tier blocks outbound SMTP on ports 25/465/587, so this path
-// only works locally or on a paid Render plan. To switch back: uncomment the
-// nodemailer import above, this helper, and the transporter blocks inside the
-// send* functions below (and comment out the Resend equivalents).
-// const createTransport = () => {
-//   return nodemailer.createTransport({
-//     host: process.env.SMTP_HOST || 'smtp.ethereal.email',
-//     port: Number(process.env.SMTP_PORT) || 587,
-//     secure: false,
-//     auth: {
-//       user: process.env.SMTP_USER,
-//       pass: process.env.SMTP_PASS,
-//     },
-//   });
-// };
-// --- Resend path (active) ---
-// Works on Render free tier because Resend sends over HTTPS (port 443),
-// which Render does not block (unlike SMTP ports).
-const getResend = () => {
-    const key = process.env.RESEND_API_KEY;
-    if (!key) {
-        throw new Error('RESEND_API_KEY is not set');
-    }
-    return new resend_1.Resend(key);
+// import { Resend } from 'resend';
+const nodemailer_1 = __importDefault(require("nodemailer"));
+// --- Gmail SMTP path (active) ---
+// Note: Render's free tier blocks outbound SMTP on ports 25/465/587, so this
+// path only works locally or on a paid Render plan.
+const createTransport = () => {
+    return nodemailer_1.default.createTransport({
+        host: process.env.SMTP_HOST || 'smtp.ethereal.email',
+        port: Number(process.env.SMTP_PORT) || 587,
+        secure: false,
+        auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS,
+        },
+    });
 };
+// --- Resend path (commented out) ---
+// Re-enable by reinstalling `resend`, uncommenting the import above, this
+// helper, and the getResend().emails.send(...) blocks inside the send*
+// functions below (and commenting out the SMTP equivalents).
+// const getResend = () => {
+//   const key = process.env.RESEND_API_KEY;
+//   if (!key) {
+//     throw new Error('RESEND_API_KEY is not set');
+//   }
+//   return new Resend(key);
+// };
 const fromAddress = () => process.env.SMTP_FROM || 'Connectedin <onboarding@resend.dev>';
 const sendVerificationEmail = (to, username, otp) => __awaiter(void 0, void 0, void 0, function* () {
     const html = `
@@ -72,40 +74,40 @@ const sendVerificationEmail = (to, username, otp) => __awaiter(void 0, void 0, v
       </div>
     </div>
   `;
-    // --- Resend path (active) ---
-    try {
-        const { data, error } = yield getResend().emails.send({
-            from: fromAddress(),
-            to,
-            subject: `${otp} is your Connectedin verification code`,
-            html,
-        });
-        if (error)
-            throw error;
-        console.log('Verification email sent:', data === null || data === void 0 ? void 0 : data.id);
-    }
-    catch (err) {
-        console.error('sendVerificationEmail failed:', err);
-        throw err;
-    }
-    // --- Gmail SMTP path (commented out) ---
+    // --- Resend path (commented out) ---
     // try {
-    //   const transporter = createTransport();
-    //   const info = await transporter.sendMail({
+    //   const { data, error } = await getResend().emails.send({
     //     from: fromAddress(),
     //     to,
     //     subject: `${otp} is your Connectedin verification code`,
     //     html,
     //   });
-    //   console.log('Verification email sent:', info.messageId);
-    //   if (process.env.NODE_ENV === 'development') {
-    //     const preview = nodemailer.getTestMessageUrl(info);
-    //     if (preview) console.log('Email preview URL:', preview);
-    //   }
+    //   if (error) throw error;
+    //   console.log('Verification email sent:', data?.id);
     // } catch (err) {
     //   console.error('sendVerificationEmail failed:', err);
     //   throw err;
     // }
+    // --- Gmail SMTP path (active) ---
+    try {
+        const transporter = createTransport();
+        const info = yield transporter.sendMail({
+            from: fromAddress(),
+            to,
+            subject: `${otp} is your Connectedin verification code`,
+            html,
+        });
+        console.log('Verification email sent:', info.messageId);
+        if (process.env.NODE_ENV === 'development') {
+            const preview = nodemailer_1.default.getTestMessageUrl(info);
+            if (preview)
+                console.log('Email preview URL:', preview);
+        }
+    }
+    catch (err) {
+        console.error('sendVerificationEmail failed:', err);
+        throw err;
+    }
 });
 exports.sendVerificationEmail = sendVerificationEmail;
 const sendPasswordResetEmail = (to, username, otp) => __awaiter(void 0, void 0, void 0, function* () {
@@ -133,39 +135,39 @@ const sendPasswordResetEmail = (to, username, otp) => __awaiter(void 0, void 0, 
       </div>
     </div>
   `;
-    // --- Resend path (active) ---
-    try {
-        const { data, error } = yield getResend().emails.send({
-            from: fromAddress(),
-            to,
-            subject: `${otp} is your Connectedin password reset code`,
-            html,
-        });
-        if (error)
-            throw error;
-        console.log('Password reset email sent:', data === null || data === void 0 ? void 0 : data.id);
-    }
-    catch (err) {
-        console.error('sendPasswordResetEmail failed:', err);
-        throw err;
-    }
-    // --- Gmail SMTP path (commented out) ---
+    // --- Resend path (commented out) ---
     // try {
-    //   const transporter = createTransport();
-    //   const info = await transporter.sendMail({
+    //   const { data, error } = await getResend().emails.send({
     //     from: fromAddress(),
     //     to,
     //     subject: `${otp} is your Connectedin password reset code`,
     //     html,
     //   });
-    //   console.log('Password reset email sent:', info.messageId);
-    //   if (process.env.NODE_ENV === 'development') {
-    //     const preview = nodemailer.getTestMessageUrl(info);
-    //     if (preview) console.log('Password reset email preview URL:', preview);
-    //   }
+    //   if (error) throw error;
+    //   console.log('Password reset email sent:', data?.id);
     // } catch (err) {
     //   console.error('sendPasswordResetEmail failed:', err);
     //   throw err;
     // }
+    // --- Gmail SMTP path (active) ---
+    try {
+        const transporter = createTransport();
+        const info = yield transporter.sendMail({
+            from: fromAddress(),
+            to,
+            subject: `${otp} is your Connectedin password reset code`,
+            html,
+        });
+        console.log('Password reset email sent:', info.messageId);
+        if (process.env.NODE_ENV === 'development') {
+            const preview = nodemailer_1.default.getTestMessageUrl(info);
+            if (preview)
+                console.log('Password reset email preview URL:', preview);
+        }
+    }
+    catch (err) {
+        console.error('sendPasswordResetEmail failed:', err);
+        throw err;
+    }
 });
 exports.sendPasswordResetEmail = sendPasswordResetEmail;
